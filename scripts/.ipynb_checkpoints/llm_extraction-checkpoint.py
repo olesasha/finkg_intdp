@@ -1,5 +1,7 @@
 import csv
 from pathlib import Path
+import sys
+csv.field_size_limit(sys.maxsize)
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import torch
@@ -132,8 +134,8 @@ def process_csv_to_txt(
 
 if __name__ == "__main__":
     process_csv_to_txt(
-        csv_path="../data/SCRAPED_gfmag_cap_1000_urls.csv",
-        output_txt_path="../data/emerging_kg_triplets_1000_raw.txt",
+        csv_path="../data/SCRAPED_gfmag_banking_1000_urls.csv",
+        output_txt_path="../data/banking_kg_triplets_1000_raw.txt",
         text_col="Text",
         date_col="Date",
         url_col="Url",
