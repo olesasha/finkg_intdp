@@ -1,11 +1,15 @@
-import csv
-from pathlib import Path
+import pandas as pd
+import re
+import json
 import sys
-csv.field_size_limit(sys.maxsize)
-
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import torch
 from tqdm import tqdm
+import argparse
+import ast 
+
+import csv
+csv.field_size_limit(sys.maxsize)
 
 MODEL_NAME = "victorlxh/ICKG-v3.2"
 
@@ -42,8 +46,51 @@ ENTITY_TYPES = [
 _device = "cuda" if torch.cuda.is_available() else "cpu"
 _pipe = None
 
+def extract_candidate_triples(text: str):
+    """
+    Ensure that there are 4 elements in each list. 
+    Filters out malformed output of the LLM.
+    """
+    pattern = r"\[[^\[\]]+\]"
+    matches = re.findall(pattern, text)
+
+    triples = []
+    for m in matches:
+        try:
+            val = ast.literal_eval(m)
+            if isinstance(val, list) and len(val) == 4:
+                triples.append(val)
+        except Exception:
+            continue
+
+    return triples
+
+def build_prompt(article_text: str, max_chars: int = 1200) -> str:
+    """
+    Builds a prompt for the LLM. 
+    """
+    if len(article_text) > max_chars:
+        article_text = article_text[:max_chars] + "..."
+    
+    prompt = (
+        "You are a business knowledge graph construction model. I will provide a news article labeled INPUT.\n"
+        "Your task is to extract triplets of the form [head:type, relation, tail:type, sector].\n"
+        f"Entities must be one of: {ENTITY_TYPES}. Relationships must be one of: {BASE_RELATIONS}.\n"
+        "First, summarize the document briefly. Then extract main triplets. Find the best suitable entity and relation types out of the allowed. Avoid redundant ones, simplify to most general form (e.g. 'foreign trade tariffs' and 'international import tariffs' become 'import tariffs').\n"
+        "Return ONLY valid JSON: a flat array of 4-element arrays like this:\n"
+        '[["Apple Inc.:company", "acquisition", "Beats Electronics:company", "Technology"],\n'
+        ' ["Google:company", "partnership", "OpenAI:company", "AI"]]\n'
+        "Format: [exact_entity_name:type, relation, exact_entity_name:type, sector]\n"
+        "Use exact names from text. Sector from context or null.\n"
+        f"INPUT:\n{article_text}\n\nJSON:\n"
+    )
+    return prompt
+
 
 def get_pipeline():
+    """
+    Defines LLM extraction pipeline.
+    """
     global _pipe
     if _pipe is None:
         print(f"Loading {MODEL_NAME} on {_device}...")
@@ -65,8 +112,10 @@ def get_pipeline():
             )
     return _pipe
 
-
 def generate(prompt: str, max_new_tokens: int = 256) -> str:
+    """
+    Generator for the tokens. 
+    """
     pipe = get_pipeline()
     out = pipe(
         prompt,
@@ -76,68 +125,91 @@ def generate(prompt: str, max_new_tokens: int = 256) -> str:
     )
     return out[0]["generated_text"][len(prompt):]
 
+def main(in_path, out_path, limit):
+    """
+    Reads and processes scraped text with ICKG LLM. 
+    Removes malformed and duplicate triplets.
+    Writes triplets and metadata to a pandas dataframe. 
+    """
+    master_rows = []
 
-def build_prompt(article_text: str, max_chars: int = 1200) -> str:
-    if len(article_text) > max_chars:
-        article_text = article_text[:max_chars] + "..."
-    
-    prompt = (
-        "You are a business knowledge graph construction model. I will provide a news article labeled INPUT.\n"
-        "Your task is to extract triplets of the form [head:type, relation, tail:type, sector].\n"
-        f"Entities must be one of: {ENTITY_TYPES}. Relationships must be one of: {BASE_RELATIONS}.\n"
-        "First, summarize the document briefly. Then extract main triplets. Find the best suitable entity and relation types out of the allowed. Avoid redundant ones, simplify to most general form (e.g. 'foreign trade tariffs' and 'international import tariffs' become 'import tariffs').\n"
-        "Return ONLY valid JSON: a flat array of 4-element arrays like this:\n"
-        '[["Apple Inc.:company", "acquisition", "Beats Electronics:company", "Technology"],\n'
-        ' ["Google:company", "partnership", "OpenAI:company", "AI"]]\n'
-        "Format: [exact_entity_name:type, relation, exact_entity_name:type, sector]\n"
-        "Use exact names from text. Sector from context or null.\n"
-        f"INPUT:\n{article_text}\n\nJSON:\n"
-    )
-    return prompt
+    with open(in_path, newline="", encoding="utf-8", errors="replace") as f_in:
+        articles = list(csv.DictReader(f_in))
 
+    if limit:
+        articles = articles[:limit]
 
-def process_csv_to_txt(
-    csv_path: str,
-    output_txt_path: str,
-    text_col: str = "Text",
-    date_col: str = "Date",
-    url_col: str = "Url",
-    max_new_tokens: int = 256,
-):
-    output_path = Path(output_txt_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    print(f"Reading {len(articles)} articles from {in_path}")
 
-    with open(csv_path, newline="", encoding="utf-8") as f_in, \
-         open(output_path, "w", encoding="utf-8") as f_out:
+    for article in tqdm(articles, desc="Processing articles"):
+        article_text = (article.get("Text") or "").strip()
+        if not article_text:
+            continue
 
-        rows = list(csv.DictReader(f_in))
+        date = article.get("Date", "")
+        url = article.get("Url", "")
 
-        for idx, row in enumerate(tqdm(rows, desc="Processing articles")):
-            article_text = (row.get(text_col) or "").strip()
-            if not article_text:
-                continue
+        prompt = build_prompt(article_text)
+        raw = generate(prompt)
+        clean = extract_candidate_triples(raw)
 
-            date_val = row.get(date_col, "")
-            url_val = row.get(url_col, "")
+        if not clean:
+            continue
 
-            prompt = build_prompt(article_text)
-            raw = generate(prompt, max_new_tokens=max_new_tokens)
+        # deduplicate + validate
+        clean = list({tuple(t) for t in clean})
+        clean = [
+            t for t in clean
+            if t[1] in BASE_RELATIONS
+            and t[0].rsplit(":", 1)[-1] in ENTITY_TYPES
+            and t[2].rsplit(":", 1)[-1] in ENTITY_TYPES
+        ]
 
-            # Dump everything as-is, plus simple header for traceability
-            f_out.write(f"=== ARTICLE {idx} ===\n")
-            f_out.write(f"DATE: {date_val}\n")
-            f_out.write(f"URL: {url_val}\n")
-            f_out.write("TRIPLETS_RAW:\n")
-            f_out.write(raw.strip())
-            f_out.write("\n\n")  # blank line between articles
+        for e1, rel, e2, industry in clean:
+            e1_name, e1_type = e1.rsplit(":", 1)
+            e2_name, e2_type = e2.rsplit(":", 1)
 
+            master_rows.append({
+                "entity1": e1_name,
+                "entity1_type": e1_type,
+                "rel_type": rel,
+                "entity2": e2_name,
+                "entity2_type": e2_type,
+                "industry": industry,
+                "url": url,
+                "date": date
+            })
 
+    df = pd.DataFrame(master_rows)
+    df.to_csv(out_path, index=False)
+    print(f"Saved {len(df)} triples to {out_path}")
+
+            
 if __name__ == "__main__":
-    process_csv_to_txt(
-        csv_path="../data/SCRAPED_gfmag_banking_1000_urls.csv",
-        output_txt_path="../data/banking_kg_triplets_1000_raw.txt",
-        text_col="Text",
-        date_col="Date",
-        url_col="Url",
-        max_new_tokens=256,
+    parser = argparse.ArgumentParser(
+        description="Extract KG triples from articles using ICKG LLM"
     )
+
+    parser.add_argument(
+        "--in-path",
+        required=True,
+        help="Path to input csv containing articles"
+    )
+
+    parser.add_argument(
+        "--out-path",
+        required=True,
+        help="Path to output csv for extracted triples"
+    )
+
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Optional: limit number of articles"
+    )
+
+    args = parser.parse_args()
+    main(args.in_path, args.out_path, args.limit)
+    
+#python llm_extraction.py --in-path ../data/SCRAPED_gfmag_banking_1000_urls.csv --out-path ../data/gfmag_banking_triplets.csv --limit 10
