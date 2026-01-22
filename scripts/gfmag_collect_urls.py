@@ -1,4 +1,3 @@
-# gfmag_collect_urls.py
 import feedparser
 import pandas as pd
 

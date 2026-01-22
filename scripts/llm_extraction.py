@@ -166,9 +166,19 @@ def main(in_path, out_path, limit):
         ]
 
         for e1, rel, e2, industry in clean:
-            e1_name, e1_type = e1.rsplit(":", 1)
-            e2_name, e2_type = e2.rsplit(":", 1)
-
+        
+            # Safe unpack function
+            def safe_split(entity):
+                parts = entity.rsplit(":", 1)
+                if len(parts) == 2:
+                    return parts[0], parts[1]
+                else:
+                    # If no colon, use UNKNOWN as type
+                    return parts[0], "UNKNOWN"
+        
+            e1_name, e1_type = safe_split(e1)
+            e2_name, e2_type = safe_split(e2)
+        
             master_rows.append({
                 "entity1": e1_name,
                 "entity1_type": e1_type,
