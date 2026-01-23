@@ -43,6 +43,24 @@ ENTITY_TYPES = [
     "other",
 ]
 
+ALLOWED_SECTORS = {
+    "banking",
+    "finance",
+    "technology",
+    "energy",
+    "healthcare",
+    "insurance",
+    "real estate",
+    "manufacturing",
+    "transportation",
+    "telecommunications",
+    "fintech",
+    "sustainability",
+    "climate",
+    "economy",
+    "other",
+}
+
 _device = "cuda" if torch.cuda.is_available() else "cpu"
 _pipe = None
 
@@ -75,7 +93,7 @@ def build_prompt(article_text: str, max_chars: int = 1200) -> str:
     prompt = (
         "You are a business knowledge graph construction model. I will provide a news article labeled INPUT.\n"
         "Your task is to extract triplets of the form [head:type, relation, tail:type, sector].\n"
-        f"Entities must be one of: {ENTITY_TYPES}. Relationships must be one of: {BASE_RELATIONS}.\n"
+        f"Entities must be one of: {ENTITY_TYPES}. Relationships must be one of: {BASE_RELATIONS}. Sectors must be one of: {ALLOWED_SECTORS}.\n"
         "First, summarize the document briefly. Then extract main triplets. Find the best suitable entity and relation types out of the allowed. Avoid redundant ones, simplify to most general form (e.g. 'foreign trade tariffs' and 'international import tariffs' become 'import tariffs').\n"
         "Return ONLY valid JSON: a flat array of 4-element arrays like this:\n"
         '[["Apple Inc.:company", "acquisition", "Beats Electronics:company", "Technology"],\n'
