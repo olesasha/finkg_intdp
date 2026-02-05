@@ -14,51 +14,47 @@ csv.field_size_limit(sys.maxsize)
 MODEL_NAME = "victorlxh/ICKG-v3.2"
 
 BASE_RELATIONS = [
-    "acquisition",
-    "relates_to",
+    "acquires",
     "invests_in",
-    "fine",
-    "lawsuit",
-    "partnership",
-    "has_positive_impact",
-    "has_negative_impact",
+    "is_fined",
+    "sues",
+    "partners_with",
     "controls",
     "has_exposure",
     "is_competitor_of",
     "is_member_of",
-    "other",
+    "supplies",
+    "has_positive_impact",
+    "has_negative_impact",
+    "other"
 ]
 
 ENTITY_TYPES = [
     "person",
     "company",
+    "financial_institution",  # Banks, insurers, funds (subset of companies but explicit)
+    "financial_instrument",   # Bonds, derivatives, stocks, loans (distinct tradable assets)
     "country",
+    "city_region",
     "regulator",
-    "event",
-    "product",
-    "financial_institution",
-    "financial_instrument",
-    "economic_indicator",
-    "sector",
-    "other",
+    "disaster_event",         # Wars, hurricanes, political conflicts, pandemics
+    "product_service",        # iPhone, AWS, Boeing 737
+    "economic_indicator",     # GDP, CPI, unemployment, interest rates
+    "other"
 ]
 
 ALLOWED_SECTORS = {
-    "banking",
-    "finance",
+    "financials",
     "technology",
-    "energy",
     "healthcare",
-    "insurance",
     "real estate",
-    "manufacturing",
+    "industrials",
     "transportation",
-    "telecommunications",
-    "fintech",
-    "sustainability",
-    "climate",
-    "economy",
-    "other",
+    "energy",
+    "consumer goods and services",
+    "natural resources",
+    "public sector",
+    "other"
 }
 
 _device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -96,8 +92,8 @@ def build_prompt(article_text: str, max_chars: int = 1200) -> str:
         f"Entities must be one of: {ENTITY_TYPES}. Relationships must be one of: {BASE_RELATIONS}. Sectors must be one of: {ALLOWED_SECTORS}.\n"
         "First, summarize the document briefly. Then extract main triplets. Find the best suitable entity and relation types out of the allowed. Avoid redundant ones, simplify to most general form (e.g. 'foreign trade tariffs' and 'international import tariffs' become 'import tariffs').\n"
         "Return ONLY valid JSON: a flat array of 4-element arrays like this:\n"
-        '[["Apple Inc.:company", "acquisition", "Beats Electronics:company", "Technology"],\n'
-        ' ["Google:company", "partnership", "OpenAI:company", "AI"]]\n'
+        '[["Apple Inc.:company", "acquires", "Beats Electronics:company", "technology"],\n'
+        ' ["Google:company", "partners_with", "OpenAI:company", "AI"]]\n'
         "Format: [exact_entity_name:type, relation, exact_entity_name:type, sector]\n"
         "Use exact names from text. Sector from context or null.\n"
         f"INPUT:\n{article_text}\n\nJSON:\n"

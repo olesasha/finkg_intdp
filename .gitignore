@@ -1,5 +1,6 @@
 FNSPID_Financial_News_Dataset/
-data/
-models/
-intdp/
-.ipynb_checkpoints
+data/*
+models/*
+intdp/*
+.ipynb_checkpoints 
+scripts/logs/*
