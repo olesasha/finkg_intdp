@@ -2,7 +2,7 @@
 
 python 02_gfmag_get_text.py \
   --in-csv gfmag_econ_urls.csv \
-  --out-csv gfmag_econ_urls.csv
+  --out-csv gfmag_econ_urls.csv \
   
 python 02_gfmag_get_text.py \
   --in-csv gfmag_trans.csv \

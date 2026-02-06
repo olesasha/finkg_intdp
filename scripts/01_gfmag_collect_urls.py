@@ -85,17 +85,17 @@ def parse_args():
         description="Scrape GFMag category archive pages for article URLs"
     )
     parser.add_argument(
-        "--category_path",  
+        "--category-path",  "--category_path", #rename python-friendly
         default="/category/banking",
         help="Category path to scrape",
     )
     parser.add_argument(
-        "--out_csv",
+        "--out-csv","--out_csv",
         default="gfmag_urls.csv",
         help="Output CSV file",
     )
     parser.add_argument(
-        "--max_articles",
+        "--max-articles","--max_articles",
         type=int,
         default=1000,
         help="Maximum number of articles to collect"
@@ -107,7 +107,6 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-
     collect_category_urls(
         category_path=args.category_path,
         out_csv=args.out_csv,
@@ -115,6 +114,6 @@ if __name__ == "__main__":
     )
 
 #python 01_gfmag_collect_urls.py \
-#  --category_path /category/banking \
-#  --out_csv gfmag_banking_1000_urls.csv \
-#  --max_articles 1000 
+#  --category-path /category/banking \
+#  --out-csv gfmag_banking_1000_urls.csv \
+#  --max-articles 1000 
