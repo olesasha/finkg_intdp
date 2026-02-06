@@ -1,36 +1,6 @@
 #!/bin/bash
 
-python neo4j_dataloader.py \
-    --csv ../data/gfmag_sustainable_triplets.csv \
-    --env ../Neo4j-6b4d3211-Created-2026-01-22.txt \
-    --batch-size 1000 \
-
-python neo4j_dataloader.py \
-    --csv ../data/gfmag_banking_triplets.csv \
-    --env ../Neo4j-6b4d3211-Created-2026-01-22.txt \
-    --batch-size 1000 \
-
-python neo4j_dataloader.py \
-    --csv ../data/gfmag_cap_triplets.csv \
-    --env ../Neo4j-6b4d3211-Created-2026-01-22.txt \
-    --batch-size 1000 \
-
-python neo4j_dataloader.py \
-    --csv ../data/gfmag_econ_triplets.csv \
-    --env ../Neo4j-6b4d3211-Created-2026-01-22.txt \
-    --batch-size 1000 \
-
-python neo4j_dataloader.py \
-    --csv ../data/gfmag_emerging_triplets.csv \
-    --env ../Neo4j-6b4d3211-Created-2026-01-22.txt \
-    --batch-size 1000 \
-
-python neo4j_dataloader.py \
-    --csv ../data/gfmag_trans_triplets.csv \
-    --env ../Neo4j-6b4d3211-Created-2026-01-22.txt \
-    --batch-size 1000 \
-
-python neo4j_dataloader.py \
-    --csv ../data/gfmag_tech_triplets.csv \
-    --env ../Neo4j-6b4d3211-Created-2026-01-22.txt \
-    --batch-size 1000 \
+python 04_neo4j_dataloader.py \
+    --csv ../data/  --out-path ../data/TRIPLETS_ALL.csv .csv \
+    --env ../Neo4j_private.txt \
+    --batch-size 1000 

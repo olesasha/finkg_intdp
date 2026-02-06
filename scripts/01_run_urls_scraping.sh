@@ -45,4 +45,4 @@ python 01_gfmag_collect_urls.py \
   --out-csv ../data/ARTICLES_gfmag_insure.csv \
   --max-articles 10000 \
 
-python helpers.deduplicate_urls.py \
+python helpers/deduplicate_urls.py \
