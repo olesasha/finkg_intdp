@@ -72,7 +72,6 @@ def collect_category_urls(
         time.sleep(sleep_time)
 
     df = pd.DataFrame(rows)
-    df["Mark"] = 0
     df["Text"] = ""
     df["Date"] = ""
     df.to_csv(out_csv, index=False)
