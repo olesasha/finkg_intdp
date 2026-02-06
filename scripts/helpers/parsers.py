@@ -29,23 +29,19 @@ def normalize_entity_type(raw_type: str) -> str:
     return ENTITY_TYPE_SYNONYMS.get(raw, "other")
 
 def normalize_sector(raw_sector: str) -> str:
-    """
-    Normalizes raw sector string from LLM.
-    Converts spaces → underscores, lowercases, and maps synonyms.
-    Falls back to 'other' if unknown.
-    """
-    if not raw_sector:
+    if not raw_sector or not isinstance(raw_sector, str):
+        log_fallback(("sector", raw_sector))
         return "other"
 
-    # lowercase and replace spaces with underscores
     raw = raw_sector.lower().replace(" ", "_").strip()
 
-    # first check if it matches a canonical sector
     if raw in ALLOWED_SECTORS:
         return raw
 
-    # then check synonyms
-    return SECTOR_SYNONYMS.get(raw, "other")
+    if raw in SECTOR_SYNONYMS:
+        return SECTOR_SYNONYMS[raw]
+
+    return "other
 
 
 def normalize_relation(rel: str) -> str:
@@ -54,12 +50,28 @@ def normalize_relation(rel: str) -> str:
         return rel_clean
     return "relates_to"  
     
-def safe_split(entity: str):
+def safe_split(entity):
+    """
+    Safely splits 'name:type' into (name, type).
+    Handles None, empty strings, and malformed input.
+    """
+    if entity is None:
+        return "UNKNOWN", "other"
+
+    if not isinstance(entity, str):
+        return str(entity), "other"
+
+    entity = entity.strip()
+    if not entity:
+        return "UNKNOWN", "other"
+
     parts = entity.rsplit(":", 1)
     if len(parts) == 2:
         return parts[0], parts[1]
     else:
-        return parts[0], "UNKNOWN"
+        return parts[0], "other"
+
+
 
 def validate_triple(triple):
     """
@@ -86,6 +98,3 @@ def validate_triple(triple):
         "sector": sector
     }
 
-def log_fallback(triple):
-    # simple print/log for now
-    print(f"Fallback detected: {triple}")

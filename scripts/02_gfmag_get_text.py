@@ -1,11 +1,8 @@
+import argparse
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
-from datetime import datetime
-
-IN_CSV = "gfmag_trans_1000_urls.csv"
-OUT_CSV = "SCRAPED_gfmag_trans_1000_urls.csv"
 
 HEADERS = {
     "User-Agent": (
@@ -14,6 +11,8 @@ HEADERS = {
         "Chrome/122.0.0.0 Safari/537.36"
     )
 }
+
+DELAY_SEC = 1.5
 
 def extract_article_text(soup: BeautifulSoup) -> str:
     for selector in [
@@ -32,14 +31,8 @@ def extract_article_text(soup: BeautifulSoup) -> str:
                 return text
     return ""
 
+
 def extract_article_date(soup: BeautifulSoup) -> str:
-    """
-    Try a few common patterns for WordPress/GFMag:
-    - <time class="entry-date" datetime="...">
-    - <time datetime="...">
-    - date text near .posted-on or .meta
-    Returns a string (ISO if possible) or "".
-    """
     # 1) <time class="entry-date" datetime="...">
     time_el = soup.select_one("time.entry-date[datetime]")
     if time_el and time_el.has_attr("datetime"):
@@ -50,27 +43,29 @@ def extract_article_date(soup: BeautifulSoup) -> str:
     if time_el and time_el.has_attr("datetime"):
         return time_el["datetime"]
 
-    # 3) fallback: plain text date in time element
+    # 3) fallback: plain text <time>
     time_el = soup.find("time")
     if time_el and time_el.get_text(strip=True):
         return time_el.get_text(strip=True)
 
-    # 4) last resort: look for a date in a meta block
+    # 4) last resort: meta block
     meta = soup.select_one(".post-meta, .entry-meta")
     if meta:
-        txt = meta.get_text(" ", strip=True)
-        return txt
+        return meta.get_text(" ", strip=True)
 
     return ""
 
-def scrape():
-    df = pd.read_csv(IN_CSV)
+
+def scrape(in_csv: str, out_csv: str):
+    df = pd.read_csv(in_csv)
+
     texts = []
     dates = []
 
     for i, row in df.iterrows():
         url = row["Url"]
         print(f"[{i}] Fetching {url}")
+
         try:
             r = requests.get(url, headers=HEADERS, timeout=20)
             r.raise_for_status()
@@ -86,12 +81,31 @@ def scrape():
 
         texts.append(text)
         dates.append(date_str)
-        time.sleep(1.5)
+        time.sleep(DELAY_SEC)
 
     df["Text"] = texts
     df["Date"] = dates
-    df.to_csv(OUT_CSV, index=False)
-    print(f"Saved scraped articles to {OUT_CSV}")
+    df.to_csv(out_csv, index=False)
+    print(f"\nSaved scraped articles to {out_csv}")
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Scrape article text and dates from GFMag article URLs"
+    )
+    parser.add_argument(
+        "--in-csv",
+        required=True,
+        help="Input CSV containing a column named 'Url'"
+    )
+    parser.add_argument(
+        "--out-csv",
+        required=True,
+        help="Output CSV with scraped Text and Date columns"
+    )
+
+    args = parser.parse_args()
+    scrape(args.in_csv, args.out_csv)
 
 if __name__ == "__main__":
-    scrape()
+    main()

@@ -226,6 +226,8 @@ SECTOR_SYNONYMS = {
     "apparel": "consumer_goods_and_services",
     "entertainment":"consumer_goods_and_services",
     "e-commerce": "consumer_goods_and_services",
+    "costmetics" : "consumer_goods_and_services",
+    "beauty": "consumer_goods_and_services",
 
     # natural resources
     "mining": "natural_resources",
