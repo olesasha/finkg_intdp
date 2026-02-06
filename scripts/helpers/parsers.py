@@ -30,7 +30,6 @@ def normalize_entity_type(raw_type: str) -> str:
 
 def normalize_sector(raw_sector: str) -> str:
     if not raw_sector or not isinstance(raw_sector, str):
-        log_fallback(("sector", raw_sector))
         return "other"
 
     raw = raw_sector.lower().replace(" ", "_").strip()

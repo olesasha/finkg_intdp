@@ -15,9 +15,9 @@ HEADERS = {
 }
 
 MAX_PAGES = 100  #safety break
+BASE_URL = "https://gfmag.com"
 
 def collect_category_urls(
-    base,
     category_path,
     out_csv,
     max_articles,
@@ -28,9 +28,9 @@ def collect_category_urls(
 
     for page in range(1, MAX_PAGES + 1):
         if page == 1:
-            url = urljoin(base, category_path)
+            url = urljoin(BASE_URL, category_path)
         else:
-            url = urljoin(base, f"{category_path}/page/{page}/")
+            url = urljoin(BASE_URL, f"{category_path}/page/{page}/")
 
         print(f"Fetching archive page {page}: {url}")
 
@@ -49,7 +49,7 @@ def collect_category_urls(
                 continue
 
             href = a["href"]
-            full_url = href if href.startswith("http") else urljoin(base, href)
+            full_url = href if href.startswith("http") else urljoin(BASE_URL, href)
             article_links.append(full_url)
 
         if not article_links:
@@ -84,50 +84,37 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Scrape GFMag category archive pages for article URLs"
     )
-
     parser.add_argument(
-        "--base",
-        default="https://gfmag.com",
-        help="Base URL of the site",
-    )
-    parser.add_argument(
-        "--category-path",
+        "--category_path",  
         default="/category/banking",
         help="Category path to scrape",
     )
     parser.add_argument(
-        "--out-csv",
+        "--out_csv",
         default="gfmag_urls.csv",
         help="Output CSV file",
     )
     parser.add_argument(
-        "--max-articles",
+        "--max_articles",
         type=int,
         default=1000,
-        help="Maximum number of articles to collect",
+        help="Maximum number of articles to collect"
     )
-    parser.add_argument(
-        "--max-pages",
-        type=int,
-        default=100,
-        help="Maximum number of pages to scan"
-    )
-
 
     return parser.parse_args()
+
 
 
 if __name__ == "__main__":
     args = parse_args()
 
     collect_category_urls(
-        base=args.base,
         category_path=args.category_path,
         out_csv=args.out_csv,
         max_articles=args.max_articles
     )
 
 #python 01_gfmag_collect_urls.py \
-#  --category-path /category/banking \
-#  --out-csv gfmag_banking_1000_urls.csv \
-#  --max-articles 1000 
+#  --category_path /category/banking \
+#  --out_csv gfmag_banking_1000_urls.csv \
+#  --max_articles 1000 
