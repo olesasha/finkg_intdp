@@ -1,3 +1,6 @@
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" #only warnings and errors, no startup logs 
+
 import pandas as pd
 import re
 import json

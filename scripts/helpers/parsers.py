@@ -41,7 +41,7 @@ def normalize_sector(raw_sector: str) -> str:
     if raw in SECTOR_SYNONYMS:
         return SECTOR_SYNONYMS[raw]
 
-    return "other
+    return "other"
 
 
 def normalize_relation(rel: str) -> str:
