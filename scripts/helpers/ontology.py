@@ -34,9 +34,9 @@ ALLOWED_SECTORS = {
     "industrials",
     "transportation",
     "energy",
-    "consumer goods and services",
-    "natural resources",
-    "public sector"
+    "consumer_goods_and_services",
+    "natural_resources",
+    "public_sector"
 }
 ENTITY_TYPE_SYNONYMS = {
 
@@ -186,6 +186,7 @@ SECTOR_SYNONYMS = {
     "it": "technology",
     "app": "technology", 
     "web":"technology", 
+    "media":"technology",
 
     # healthcare
     "health": "healthcare",
@@ -201,6 +202,7 @@ SECTOR_SYNONYMS = {
     "industrial": "industrials",
     "manufacturing": "industrials",
     "construction": "industrials",
+    "chemicals": "industrials",
 
     # transportation
     "transport": "transportation",
@@ -211,15 +213,16 @@ SECTOR_SYNONYMS = {
     # energy
     "oil": "energy",
     "gas": "energy",
-    "energy_sector": "energy",
+    "energy sector": "energy",
     "utilities": "energy",
     "renewables": "energy",
 
     # consumer goods and services
     "consumer": "consumer goods and services",
     "retail": "consumer goods and services",
-    "food_and_beverage": "consumer goods and services",
-    "fmcg": "consumer goods and services",
+    "food": "consumer goods and services",
+    "beverages": "consumer goods and services",
+    "food and beverages": "consumer goods and services",
     "apparel": "consumer goods and services",
     "entertainment":"consumer goods and services",
     "e-commerce": "consumer goods and services",

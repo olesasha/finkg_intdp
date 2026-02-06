@@ -29,13 +29,27 @@ def normalize_entity_type(raw_type: str) -> str:
     return ENTITY_TYPE_SYNONYMS.get(raw, "other")
 
 def normalize_sector(raw_sector: str) -> str:
+    """
+    Normalizes raw sector string from LLM.
+    Converts spaces → underscores, lowercases, and maps synonyms.
+    Falls back to 'other' if unknown.
+    """
     if not raw_sector:
         return "other"
+
+    # lowercase and replace spaces with underscores
     raw = raw_sector.lower().replace(" ", "_").strip()
+
+    # first check if it matches a canonical sector
+    if raw in ALLOWED_SECTORS:
+        return raw
+
+    # then check synonyms
     return SECTOR_SYNONYMS.get(raw, "other")
 
+
 def normalize_relation(rel: str) -> str:
-    rel_clean = rel.lower().strip()
+    rel_clean = rel.lower().replace(" ", "_").strip()
     if rel_clean in BASE_RELATIONS:
         return rel_clean
     return "relates_to"  
@@ -69,7 +83,7 @@ def validate_triple(triple):
         "rel_type": rel,
         "entity2": e2_name,
         "entity2_type": e2_type,
-        "industry": sector
+        "sector": sector
     }
 
 def log_fallback(triple):

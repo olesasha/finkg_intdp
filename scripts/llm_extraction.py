@@ -102,10 +102,14 @@ def main(in_path, out_path, limit=None):
 
         # Normalize and validate
         for triple in candidate_triples:
+            # Keep original sector for analysis
+            original_sector = triple[3]  
+        
             normalized = validate_triple(triple)
             if normalized:
                 normalized["url"] = url
                 normalized["date"] = date
+                normalized["original_sector"] = original_sector  # <--- add this
                 master_rows.append(normalized)
 
     df = pd.DataFrame(master_rows)
