@@ -30,7 +30,7 @@ ALLOWED_SECTORS = {
     "financials",
     "technology",
     "healthcare",
-    "real estate",
+    "real_estate",
     "industrials",
     "transportation",
     "energy",
@@ -195,8 +195,8 @@ SECTOR_SYNONYMS = {
     "medical": "healthcare",
 
     # real estate
-    "property": "real estate",
-    "housing": "real estate",
+    "property": "real_estate",
+    "housing": "real_estate",
 
     # industrials
     "industrial": "industrials",
@@ -218,27 +218,27 @@ SECTOR_SYNONYMS = {
     "renewables": "energy",
 
     # consumer goods and services
-    "consumer": "consumer goods and services",
-    "retail": "consumer goods and services",
-    "food": "consumer goods and services",
-    "beverages": "consumer goods and services",
-    "food and beverages": "consumer goods and services",
-    "apparel": "consumer goods and services",
-    "entertainment":"consumer goods and services",
-    "e-commerce": "consumer goods and services",
+    "consumer": "consumer_goods_and_services",
+    "retail": "consumer_goods_and_services",
+    "food": "consumer_goods_and_services",
+    "beverages": "consumer_goods_and_services",
+    "food and beverages": "consumer_goods_and_services",
+    "apparel": "consumer_goods_and_services",
+    "entertainment":"consumer_goods_and_services",
+    "e-commerce": "consumer_goods_and_services",
 
     # natural resources
-    "mining": "natural resources",
-    "metals": "natural resources",
-    "agriculture": "natural resources",
-    "timber": "natural resources",
-    "sustainability": "natural resources",
+    "mining": "natural_resources",
+    "metals": "natural_resources",
+    "agriculture": "natural_resources",
+    "timber": "natural_resources",
+    "sustainability": "natural_resources",
 
     # public sector
-    "government": "public sector",
-    "public": "public sector",
-    "state": "public sector",
-    "education": "public sector",
-    "social services":  "public sector"
+    "government": "public_sector",
+    "public": "public_sector",
+    "state": "public_sector",
+    "education": "public_sector",
+    "social services":  "public_sector"
 }
 
