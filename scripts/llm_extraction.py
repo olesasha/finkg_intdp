@@ -7,77 +7,17 @@ import torch
 from tqdm import tqdm
 import argparse
 import ast 
-
 import csv
 csv.field_size_limit(sys.maxsize)
 
+# customs ____
+from helpers.parsers import validate_triple, extract_candidate_triples
+from helpers.ontology import ENTITY_TYPES, BASE_RELATIONS, ALLOWED_SECTORS
+#_____________
+
 MODEL_NAME = "victorlxh/ICKG-v3.2"
-
-BASE_RELATIONS = [
-    "acquires",
-    "invests_in",
-    "is_fined",
-    "sues",
-    "partners_with",
-    "controls",
-    "has_exposure",
-    "is_competitor_of",
-    "is_member_of",
-    "supplies",
-    "has_positive_impact",
-    "has_negative_impact",
-    "other"
-]
-
-ENTITY_TYPES = [
-    "person",
-    "company",
-    "financial_institution",  # Banks, insurers, funds (subset of companies but explicit)
-    "financial_instrument",   # Bonds, derivatives, stocks, loans (distinct tradable assets)
-    "country",
-    "city_region",
-    "regulator",
-    "disaster_event",         # Wars, hurricanes, political conflicts, pandemics
-    "product_service",        # iPhone, AWS, Boeing 737
-    "economic_indicator",     # GDP, CPI, unemployment, interest rates
-    "other"
-]
-
-ALLOWED_SECTORS = {
-    "financials",
-    "technology",
-    "healthcare",
-    "real estate",
-    "industrials",
-    "transportation",
-    "energy",
-    "consumer goods and services",
-    "natural resources",
-    "public sector",
-    "other"
-}
-
-_device = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 _pipe = None
-
-def extract_candidate_triples(text: str):
-    """
-    Ensure that there are 4 elements in each list. 
-    Filters out malformed output of the LLM.
-    """
-    pattern = r"\[[^\[\]]+\]"
-    matches = re.findall(pattern, text)
-
-    triples = []
-    for m in matches:
-        try:
-            val = ast.literal_eval(m)
-            if isinstance(val, list) and len(val) == 4:
-                triples.append(val)
-        except Exception:
-            continue
-
-    return triples
 
 def build_prompt(article_text: str, max_chars: int = 1200) -> str:
     """
@@ -107,9 +47,9 @@ def get_pipeline():
     """
     global _pipe
     if _pipe is None:
-        print(f"Loading {MODEL_NAME} on {_device}...")
+        print(f"Loading {MODEL_NAME} on {DEVICE}...")
         tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        if _device == "cuda":
+        if DEVICE == "cuda":
             model = AutoModelForCausalLM.from_pretrained(
                 MODEL_NAME,
                 dtype=torch.float16,
@@ -139,12 +79,7 @@ def generate(prompt: str, max_new_tokens: int = 256) -> str:
     )
     return out[0]["generated_text"][len(prompt):]
 
-def main(in_path, out_path, limit):
-    """
-    Reads and processes scraped text with ICKG LLM. 
-    Removes malformed and duplicate triplets.
-    Writes triplets and metadata to a pandas dataframe. 
-    """
+def main(in_path, out_path, limit=None):
     master_rows = []
 
     with open(in_path, newline="", encoding="utf-8", errors="replace") as f_in:
@@ -156,53 +91,22 @@ def main(in_path, out_path, limit):
     print(f"Reading {len(articles)} articles from {in_path}")
 
     for article in tqdm(articles, desc="Processing articles"):
-        article_text = (article.get("Text") or "").strip()
-        if not article_text:
+        text = (article.get("Text") or "").strip()
+        if not text:
             continue
 
-        date = article.get("Date", "")
-        url = article.get("Url", "")
+        date, url = article.get("Date", ""), article.get("Url", "")
+        prompt = build_prompt(text)
+        raw_output = generate(prompt)
+        candidate_triples = extract_candidate_triples(raw_output)
 
-        prompt = build_prompt(article_text)
-        raw = generate(prompt)
-        clean = extract_candidate_triples(raw)
-
-        if not clean:
-            continue
-
-        # deduplicate + validate
-        clean = list({tuple(t) for t in clean})
-        clean = [
-            t for t in clean
-            if t[1] in BASE_RELATIONS
-            and t[0].rsplit(":", 1)[-1] in ENTITY_TYPES
-            and t[2].rsplit(":", 1)[-1] in ENTITY_TYPES
-        ]
-
-        for e1, rel, e2, industry in clean:
-        
-            # Safe unpack function
-            def safe_split(entity):
-                parts = entity.rsplit(":", 1)
-                if len(parts) == 2:
-                    return parts[0], parts[1]
-                else:
-                    # If no colon, use UNKNOWN as type
-                    return parts[0], "UNKNOWN"
-        
-            e1_name, e1_type = safe_split(e1)
-            e2_name, e2_type = safe_split(e2)
-        
-            master_rows.append({
-                "entity1": e1_name,
-                "entity1_type": e1_type,
-                "rel_type": rel,
-                "entity2": e2_name,
-                "entity2_type": e2_type,
-                "industry": industry,
-                "url": url,
-                "date": date
-            })
+        # Normalize and validate
+        for triple in candidate_triples:
+            normalized = validate_triple(triple)
+            if normalized:
+                normalized["url"] = url
+                normalized["date"] = date
+                master_rows.append(normalized)
 
     df = pd.DataFrame(master_rows)
     df.to_csv(out_path, index=False)
@@ -210,29 +114,10 @@ def main(in_path, out_path, limit):
 
             
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Extract KG triples from articles using ICKG LLM"
-    )
-
-    parser.add_argument(
-        "--in-path",
-        required=True,
-        help="Path to input csv containing articles"
-    )
-
-    parser.add_argument(
-        "--out-path",
-        required=True,
-        help="Path to output csv for extracted triples"
-    )
-
-    parser.add_argument(
-        "--limit",
-        type=int,
-        default=None,
-        help="Optional: limit number of articles"
-    )
-
+    parser = argparse.ArgumentParser(description="Extract KG triples from articles using ICKG LLM")
+    parser.add_argument("--in-path", required=True, help="Path to input CSV containing articles")
+    parser.add_argument("--out-path", required=True, help="Path to output CSV for extracted triples")
+    parser.add_argument("--limit", type=int, default=None, help="Optional limit on number of articles")
     args = parser.parse_args()
     main(args.in_path, args.out_path, args.limit)
     
