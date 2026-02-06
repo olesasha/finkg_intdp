@@ -119,4 +119,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-#python dataloader.py --csv ../data/gfmag_sustainable_triplets.csv --env ../Neo4j-6b4d3211-Created-2026-01-22.txt --batch-size 1000
+#python neo4j_dataloader.py --csv ../data/gfmag_sustainable_triplets.csv --env ../Neo4j-6b4d3211-Created-2026-01-22.txt --batch-size 1000

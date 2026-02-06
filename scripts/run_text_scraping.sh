@@ -1,38 +1,38 @@
 #!/bin/bash
 
 python 02_gfmag_get_text.py \
-  --in-csv gfmag_econ_urls.csv \
-  --out-csv gfmag_econ_urls.csv \
+  --in-csv ../data/gfmag_econ_articles.csv \
+  --out-csv ../data/gfmag_econ_articles.csv \
   
 python 02_gfmag_get_text.py \
-  --in-csv gfmag_trans.csv \
-  --out-csv gfmag_trans.csv \
+  --in-csv ../data/gfmag_trans_articles.csv \
+  --out-csv ../data/gfmag_trans_articles.csv \
 
 python 02_gfmag_get_text.py \
-  --in-csv gfmag_cap.csv \
-  --out-csv gfmag_cap.csv \
+  --in-csv ../data/gfmag_cap_articles.csv \
+  --out-csv ../data/gfmag_cap_articles.csv \
 
 python 02_gfmag_get_text.py \
-  --in-csv gfmag_emerging.csv \
-  --out-csv gfmag_emerging.csv \
+  --in-csv ../data/gfmag_emerging_articles.csv \
+  --out-csv ../data/gfmag_emerging_articles.csv \
 
 python 02_gfmag_get_text.py \
-  --in-csv gfmag_sustainable..csv \
-  --out-csv gfmag_sustainable.csv \
+  --in-csv ../data/gfmag_sustainable_articles..csv \
+  --out-csv ../data/gfmag_sustainable_articles.csv \
 
 python 02_gfmag_get_text.py \
-  --in-csv gfmag_banking.csv \
-  --out-csv gfmag_banking.csv \
+  --in-csv ../data/gfmag_banking_articles.csv \
+  --out-csv ../data/gfmag_banking_articles.csv \
 
 python 02_gfmag_get_text.py \
-  --in-csv gfmag_tech.csv \
-  --out-csv gfmag_tech.csv \
+  --in-csv ../data/gfmag_tech_articles.csv \
+  --out-csv ../data/gfmag_tech_articles.csv \
 
 python 02_gfmag_get_text.py \
-  --in-csv gfmag_cred.csv \
-  --out-csv gfmag_cred.csv \
+  --in-csv ../data/gfmag_cred_articles.csv \
+  --out-csv ../data/gfmag_cred_articles.csv \
 
 python 02_gfmag_get_text.py \
-  --in-csv gfmag_insure.csv \
-  --out-csv gfmag_insure.csv \
+  --in-csv ../data/gfmag_insure_articles.csv \
+  --out-csv ../data/gfmag_insure_articles.csv \
   
