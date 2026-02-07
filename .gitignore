@@ -5,3 +5,4 @@ intdp/*
 .ipynb_checkpoints 
 scripts/logs/*
 Neo4j_private.txt
+__pycache__/

@@ -13,3 +13,5 @@ Parts of the projects are inspired and supported by prior research, in particula
 
 ## References 
 [1] Li, X. V., & Sanna Passino, F. (2024). FinDKG: Dynamic Knowledge Graphs with Large Language Models for Detecting Global Trends in Financial Markets. In Proceedings of the 5th ACM International Conference on AI in Finance (pp. 573–581). ACM. ICAIF ’24: 5th ACM International Conference on AI in Finance. https://doi.org/10.1145/3677052.3698603
+
+No commercial use intended. 

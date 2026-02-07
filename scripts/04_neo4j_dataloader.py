@@ -51,8 +51,11 @@ def batch_insert(tx, batch):
 
 def load_to_neo4j(csv_file, env_file: str, batch_size: int = 1000):
     df = pd.read_csv(csv_file)
-    df.rename(columns={"industry":"sector"}, inplace=True)
     df["sector"] = df["sector"].str.lower()
+    df = df[
+    df["entity1"].notna() &
+    df["entity2"].notna()
+    ]
     # load Aura credentials
     dotenv.load_dotenv(env_file)
     URI = os.getenv("NEO4J_URI")

@@ -23,7 +23,9 @@ ENTITY_TYPES = [
     "regulator",
     "disaster_event",         # Wars, hurricanes, political conflicts, pandemics
     "product_service",        # iPhone, AWS, Boeing 737
-    "economic_indicator"     # GDP, CPI, unemployment, interest rates
+    "natural_resource",      # wind, gas
+    "economic_indicator",     # GDP, CPI, unemployment, interest rates
+    "industry"
 ]
 
 ALLOWED_SECTORS = {
@@ -155,6 +157,18 @@ ENTITY_TYPE_SYNONYMS = {
     "device": "product_service",
     "model": "product_service",
 
+    # ───── natural_resource ─────
+    "commodity" : "natural_resource",
+    "resource" : "natural_resource",
+    "resources" : "natural_resource",
+    "mineral" : "natural_resource",
+    
+    # ───── industry ─────
+    "sector" : "industry",
+    "market" : "industry", 
+    "field" : "industry",
+    "domain" : "industry", 
+    
     # ───── economic indicator ─────
     "gdp": "economic_indicator",
     "inflation": "economic_indicator",

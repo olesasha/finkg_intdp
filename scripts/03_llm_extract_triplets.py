@@ -103,7 +103,7 @@ def main(in_path, out_path, limit=None):
         raw_output = generate(prompt)
         candidate_triples = extract_candidate_triples(raw_output)
 
-        # Normalize and validate
+        # normalize and validate
         for triple in candidate_triples:
             normalized = validate_triple(triple)
             if normalized:

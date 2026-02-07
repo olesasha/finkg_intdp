@@ -2,6 +2,7 @@ import re
 import ast
 import pandas as pd
 from helpers.ontology import ENTITY_TYPES, BASE_RELATIONS, ALLOWED_SECTORS, SECTOR_SYNONYMS, ENTITY_TYPE_SYNONYMS
+import pycountry
 
 def extract_candidate_triples(text: str):
     """
@@ -27,6 +28,29 @@ def normalize_entity_type(raw_type: str) -> str:
     if raw in ENTITY_TYPES:
         return raw
     return ENTITY_TYPE_SYNONYMS.get(raw, "other")
+
+def normalize_countries(name: str, entity_type: str):
+    # clean name (punctuation + whitespace)
+    if isinstance(name, str):
+        cleaned = re.sub(r"[^\w\s]", "", name)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    else:
+        cleaned = name
+
+    # try country lookup
+    try:
+        pycountry.countries.lookup(cleaned)
+        is_country = True
+    except Exception:
+        is_country = False
+
+    # case handling
+    if is_country:
+        return cleaned, "country"
+    if entity_type == "country":
+        return cleaned, "other"
+    return cleaned, entity_type
+
 
 def normalize_sector(raw_sector: str) -> str:
     if not raw_sector or not isinstance(raw_sector, str):
@@ -71,20 +95,27 @@ def safe_split(entity):
         return parts[0], "other"
 
 
-
 def validate_triple(triple):
     """
     Normalizes a candidate triple.
-    Returns a dictionary with canonical fields.
+    Returns a dictionary with defined fields.
     Unknowns are mapped to 'other' or 'relates_to'.
     """
     e1, rel, e2, sector = triple
 
+    # split name/type
     e1_name, e1_type = safe_split(e1)
     e2_name, e2_type = safe_split(e2)
 
+    # normalize entity types (generic)
     e1_type = normalize_entity_type(e1_type)
     e2_type = normalize_entity_type(e2_type)
+
+    # apply country normalization 
+    e1_name, e1_type = normalize_countries(e1_name, e1_type)
+    e2_name, e2_type = normalize_countries(e2_name, e2_type)
+
+    # normalize relation and sector
     rel = normalize_relation(rel)
     sector = normalize_sector(sector)
 
@@ -96,4 +127,3 @@ def validate_triple(triple):
         "entity2_type": e2_type,
         "sector": sector
     }
-
