@@ -3,6 +3,7 @@ import ast
 import pandas as pd
 from helpers.ontology import ENTITY_TYPES, BASE_RELATIONS, ALLOWED_SECTORS, SECTOR_SYNONYMS, ENTITY_TYPE_SYNONYMS
 import pycountry
+import math
 
 def extract_candidate_triples(text: str):
     """
@@ -29,27 +30,22 @@ def normalize_entity_type(raw_type: str) -> str:
         return raw
     return ENTITY_TYPE_SYNONYMS.get(raw, "other")
 
+
 def normalize_countries(name: str, entity_type: str):
-    # clean name (punctuation + whitespace)
-    if isinstance(name, str):
-        cleaned = re.sub(r"[^\w\s]", "", name)
-        cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    else:
-        cleaned = name
+    """
+    Conservative country normalization.
+    Never upgrades non-country entities.
+    """
+    cleaned = re.sub(r"[^\w\s]", "", name)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
-    # try country lookup
+    if entity_type != "country":
+        return cleaned, entity_type
     try:
-        pycountry.countries.lookup(cleaned)
-        is_country = True
-    except Exception:
-        is_country = False
-
-    # case handling
-    if is_country:
-        return cleaned, "country"
-    if entity_type == "country":
+        country = pycountry.countries.lookup(cleaned)
+        return country.name, "country"
+    except:
         return cleaned, "other"
-    return cleaned, entity_type
 
 
 def normalize_sector(raw_sector: str) -> str:
@@ -94,7 +90,9 @@ def safe_split(entity):
     else:
         return parts[0], "other"
 
-
+def is_nan(x):
+    return x is None or (isinstance(x, float) and math.isnan(x))
+    
 def validate_triple(triple):
     """
     Normalizes a candidate triple.
@@ -119,6 +117,10 @@ def validate_triple(triple):
     rel = normalize_relation(rel)
     sector = normalize_sector(sector)
 
+    # drop na
+    if is_nan(e1_name) or is_nan(e2_name):
+    return None
+    
     return {
         "entity1": e1_name,
         "entity1_type": e1_type,
