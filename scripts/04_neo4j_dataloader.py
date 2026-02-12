@@ -22,33 +22,6 @@ REL_TYPE_MAP = {
     "other": "OTHER"
 }
 
-def batch_insert(tx, batch):
-    for row in batch:
-        rel_label = REL_TYPE_MAP[row["rel_type"]]  # trusted input
-
-        query = f"""
-        MERGE (e1:Entity {{name: $e1_name}})
-        ON CREATE SET e1.type = $e1_type
-        MERGE (e2:Entity {{name: $e2_name}})
-        ON CREATE SET e2.type = $e2_type
-        MERGE (e1)-[r:{rel_label}]->(e2)
-        SET r.sector = $sector,
-            r.url = $url,
-            r.date = $date
-        """
-
-        tx.run(
-            query,
-            e1_name=row["entity1"],
-            e1_type=row["entity1_type"],
-            e2_name=row["entity2"],
-            e2_type=row["entity2_type"],
-            sector=row["sector"],
-            url=row["url"],
-            date=str(row["date"]),
-        )
-
-
 def load_to_neo4j(csv_file, env_file: str, batch_size: int = 1000):
     df = pd.read_csv(csv_file)
     df["sector"] = df["sector"].str.lower()
