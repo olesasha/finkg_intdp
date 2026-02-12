@@ -6,22 +6,6 @@ import pandas as pd
 import argparse
 from tqdm import tqdm
 
-REL_TYPE_MAP = {
-    "acquires": "ACQUIRES",
-    "invests_in": "INVESTS_IN",
-    "is_fined": "IS_FINED",
-    "sues": "SUES",
-    "partners_with": "PARTNERS_WITH",
-    "controls": "CONTROLS",
-    "has_exposure": "HAS_EXPOSURE",
-    "is_competitor_of": "IS_COMPETITOR_OF",
-    "is_member_of": "IS_MEMBER_OF",
-    "supplies": "SUPPLIES",
-    "has_positive_impact": "HAS_POSITIVE_IMPACT",
-    "has_negative_impact": "HAS_NEGATIVE_IMPACT",
-    "other": "OTHER"
-}
-
 def load_to_neo4j(csv_file, env_file: str, batch_size: int = 1000):
     df = pd.read_csv(csv_file)
     df["sector"] = df["sector"].str.lower()
@@ -37,9 +21,12 @@ def load_to_neo4j(csv_file, env_file: str, batch_size: int = 1000):
     def batch_insert(tx, batch):
         for row in batch:
             rel_type = row['rel_type'].replace('`', '')  # sanitize
+            entity1_type = row['entity1_type'].replace('`', '')
+            entity2_type = row['entity2_type'].replace('`', '')
+            
             query = f"""
-            MERGE (e1:Entity {{name: $e1_name, type: $e1_type}})
-            MERGE (e2:Entity {{name: $e2_name, type: $e2_type}})
+            MERGE (e1:Entity:`{entity1_type}` {{name: $e1_name}})
+            MERGE (e2:Entity:`{entity2_type}` {{name: $e2_name}})
             MERGE (e1)-[r:`{rel_type}`]->(e2)
             SET r.sector = $sector,
                 r.url = $url,
@@ -47,9 +34,7 @@ def load_to_neo4j(csv_file, env_file: str, batch_size: int = 1000):
             """
             tx.run(query,
                    e1_name=row['entity1'],
-                   e1_type=row['entity1_type'],
                    e2_name=row['entity2'],
-                   e2_type=row['entity2_type'],
                    sector=row['sector'],
                    url=row['url'],
                    date=str(row['date'])  # ensure string
