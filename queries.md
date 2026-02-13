@@ -2,8 +2,8 @@
 
 ## E1: indirect impact
 ```cypher
-MATCH (a:Entity)-[:has_positive_impact]->(b:Entity)
-      -[r2:has_positive_impact]->(c:Entity)
+MATCH (a)-[:has_positive_impact]->(b)
+      -[r2:has_positive_impact]->(c)
 
 MATCH (a)-[ind:has_positive_indirect_impact]->(c)
 
@@ -18,7 +18,7 @@ RETURN count(ind) AS updated_relationships
 ## E2: investor role
 
 ```cypher
-MATCH (e:Entity)-[:invests_in]->(:Entity)
+MATCH (e)-[:invests_in]->()
 SET e.role = 'investor'
 RETURN count(e) AS UpdatedEntities
 ```
@@ -26,7 +26,7 @@ RETURN count(e) AS UpdatedEntities
 ## E3: add exposure 
 
 ```cypher
-MATCH (a:Entity)-[r]->(b:Entity)
+MATCH (a)-[r]->(b)
 WHERE type(r) IN ["invests_in", "acquires", "supplies", "controls"]
   AND r.sector IS NOT NULL
   AND r.sector <> "other"
@@ -37,14 +37,14 @@ ON CREATE SET
     e.source = "inferred",
     e.method = "sector_exposure"
 ON MATCH SET
-    e.weight = coalesce(e.weight, 0) + 1
+    r.weight = coalesce(r.weight, 0) + 1
 ```
 
 ## E4: indirect exposure 
 
 ```cypher
  // Create indirect exposure edges
-MATCH (a:Entity)-[r1:has_exposure]->(b:Entity)-[r2:has_exposure]->(c:Entity)
+MATCH (a)-[r1:has_exposure]->(b)-[r2:has_exposure]->(c)
 WHERE r2.sector IS NOT NULL AND r2.sector <> "other" AND a <> c
 MERGE (a)-[e:has_indirect_exposure {sector: r2.sector}]->(c)
 ON CREATE SET
@@ -53,28 +53,6 @@ ON CREATE SET
     e.weight = 1
 ON MATCH SET
     e.weight = e.weight + 1
-```
-## E5: Adding labels 
-```cypher
-MATCH (e:Entity)
-WHERE e.type IS NOT NULL
-CALL(e) {
-    WITH e
-    // For each possible type, add a label
-    FOREACH (_ IN CASE WHEN e.type = "natural_resource" THEN [1] ELSE [] END | SET e:NaturalResource)
-    FOREACH (_ IN CASE WHEN e.type = "economic_indicator" THEN [1] ELSE [] END | SET e:EconomicIndicator)
-    FOREACH (_ IN CASE WHEN e.type = "industry" THEN [1] ELSE [] END | SET e:`Industry`)
-}
-RETURN count(e) AS UpdatedEntities
-```
-
-## E6: Remove generic labels where specific exist
-```cypher
-MATCH (n:Entity)
-WHERE size(labels(n)) > 1
-REMOVE n:Entity
-RETURN n, labels(n)
-LIMIT 20
 ```
 
 # Dashboard queries
@@ -95,7 +73,7 @@ ORDER BY Sector
 
 ## D1: Number of investments per sector
 ```cypher
-MATCH (:Entity)-[r:invests_in|acquires]->(target:Entity)
+MATCH (:Entity)-[r:invests_in|acquires]->(target)
 WHERE r.sector IS NOT NULL AND r.sector <> "other"
 RETURN r.sector AS Sector,
        count(DISTINCT target) AS NumInvestmentTargets
@@ -105,7 +83,7 @@ ORDER BY NumInvestmentTargets ASC;
 ## D2: Market players with direct or indirect exposure in the chosen sector
 ```cypher
 // Direct exposure
-MATCH (e:Entity)-[r:has_exposure]->(target:Entity)
+MATCH (e)-[r:has_exposure]->(target)
 WHERE r.sector = $text_1
 RETURN e AS Entity, r, target AS ExposedEntity
 //LIMIT 20
@@ -113,7 +91,7 @@ RETURN e AS Entity, r, target AS ExposedEntity
 UNION
 
 // Indirect exposure
-MATCH (e:Entity)-[r:has_indirect_exposure]->(target:Entity)
+MATCH (e)-[r:has_indirect_exposure]->(target)
 WHERE r.sector = $text_1
 RETURN e AS Entity, r, target AS ExposedEntity
 //LIMIT 20
@@ -121,7 +99,7 @@ RETURN e AS Entity, r, target AS ExposedEntity
 
 ## D3: Most present sectors in selected country 
 ```cypher
-MATCH (country:Country {name: $custom})-[r]-(e:Entity)
+MATCH (country:Country {name: $custom})-[r]-(e)
 RETURN r.sector AS Sector, count(r) AS NumEntities
 ORDER BY NumEntities DESC
 ```
@@ -164,8 +142,97 @@ LIMIT 10
 ```
 ## D7: Most present countries in the sector
 ```cypher
-MATCH (country:Country)-[r]-(e:Entity)
+MATCH (c:Country)-[r]-(e:Entity)
 WHERE r.sector = $custom_1
-RETURN country.name, count(country) AS NumEntities
+RETURN c.name, count(c) AS NumEntities
 ORDER BY NumEntities DESC
+```
+
+## D8: DisasterEvent direct impact
+```cypher
+
+// Step 1: find top connected DisasterEvents by degree
+MATCH (c:DisasterEvent)-[r]->()
+WHERE NOT type(r) IN [
+    "positive_indirect_impact",
+    "negative_indirect_impact",
+    "has_indirect_exposure"
+]
+WITH c, count(r) AS relCount
+ORDER BY relCount DESC
+LIMIT 10  // pick top N most connected events
+
+// Step 2: return all direct relationships of these top events
+MATCH (c)-[r]->(e)
+WHERE NOT type(r) IN [
+    "positive_indirect_impact",
+    "negative_indirect_impact",
+    "has_indirect_exposure"
+]
+RETURN c, r, e
+LIMIT 200
+```
+
+## D9: Exposure and control per country 
+```cypher
+MATCH (c:Country {name: $custom})-[r]->(e)
+WHERE type(r) IN ["has_exposre", "has_indirect_exposure", "controls"]
+RETURN c, r, e
+LIMIT $number
+```
+
+## D10: Country investments 
+```cypher
+MATCH (c:Country {name: $custom})-[r]->(e)
+WHERE type(r) IN ["invests_in", "acquires"]
+RETURN c, r, e
+LIMIT $number
+```
+
+## D11: Direct impact of market players in the sector
+```cypher
+MATCH (e1)-[r]->(e2)
+WHERE type(r) IN ["has_positive_impact",
+                 "has_negative_impact"]
+AND r.sector = $custom_1
+RETURN e1, r, e2
+LIMIT $number
+```
+
+## D12: Top 10 investors in the sector
+```cypher
+// Step 1: find top 10 target nodes by count
+MATCH (e1)-[r]->(e2)
+WHERE type(r) IN ["invests_in", "acquires"]
+  AND r.sector = $custom_1
+WITH e1, count(*) AS cnt
+ORDER BY cnt DESC
+LIMIT 10
+
+// Step 2: get all incoming relationships for these top e2 nodes
+MATCH (e1)-[r]->(e2)
+WHERE type(r) IN ["invests_in", "acquires"]
+  AND r.sector = $custom_1
+RETURN e1, r, e2
+ORDER BY e2.name  // or any other ordering
+```
+## D13: Investment targets and investors
+```cypher
+MATCH (e1)-[r]->(e2)
+WHERE r.sector = $custom_1 AND type(r) IN ["invests_in", "acquires"]
+WITH e2, count(*) AS cnt, collect(e1.name) AS investors
+RETURN e2.name AS Target, cnt AS NumInvestments, investors
+ORDER BY cnt DESC
+LIMIT $number
+```
+
+## D14: Top connected entities
+```cypher
+MATCH (a)-[r]->(b)
+WHERE NOT type(r) CONTAINS "indirect"
+WITH a, b, COLLECT(r) AS rels, COUNT(r) AS NumRelationships
+ORDER BY NumRelationships DESC
+LIMIT 20
+UNWIND rels AS r
+RETURN a, b, r
 ```
