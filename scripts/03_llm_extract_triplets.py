@@ -21,8 +21,10 @@ from helpers.ontology import ENTITY_TYPES, BASE_RELATIONS, ALLOWED_SECTORS
 MODEL_NAME = "victorlxh/ICKG-v3.2"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 _pipe = None
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
-def build_prompt(article_text: str, max_chars: int = 1500) -> str:
+def build_prompt(article_text: str, max_chars: int = 1600) -> str:
     """
     Builds a prompt for the LLM. 
     """
@@ -55,29 +57,31 @@ def get_pipeline():
         if DEVICE == "cuda":
             model = AutoModelForCausalLM.from_pretrained(
                 MODEL_NAME,
-                dtype=torch.float16,
+                dtype=torch.float32,
                 device_map="auto",
             )
             _pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
         else:
             model = AutoModelForCausalLM.from_pretrained(
                 MODEL_NAME,
-                dtype=torch.float16,
+                dtype=torch.float32,
             )
             _pipe = pipeline(
                 "text-generation", model=model, tokenizer=tokenizer, device=-1
             )
     return _pipe
 
-def generate(prompt: str, max_new_tokens: int = 350) -> str:
+def generate(prompt: str, max_new_tokens: int = 500) -> str:
     """
     Generator for the tokens. 
     """
     pipe = get_pipeline()
     out = pipe(
         prompt,
-        max_new_tokens=max_new_tokens,
-        do_sample=False,
+        max_new_tokens=500,
+        do_sample=True,
+        temperature=0.2,
+        top_p=0.9,
         pad_token_id=pipe.tokenizer.eos_token_id,
     )
     return out[0]["generated_text"][len(prompt):]

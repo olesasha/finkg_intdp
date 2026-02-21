@@ -119,7 +119,7 @@ def validate_triple(triple):
 
     # drop na
     if is_nan(e1_name) or is_nan(e2_name):
-    return None
+        return None
     
     return {
         "entity1": e1_name,
