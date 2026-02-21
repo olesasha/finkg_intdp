@@ -1,5 +1,5 @@
 #!/bin/bash
 
-python 02_gfmag_get_text.py \
-  --in-csv ../data/ARTICLES_ALL.csv \
-  --out-csv ../data/ARTICLES_ALL.csv \
+python 02_get_text.py \
+  --in-csv ../data/URLS_yahoo.csv \
+  --out-csv ../data/ARTICLES_yahoo.csv \

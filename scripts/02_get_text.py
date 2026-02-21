@@ -58,10 +58,9 @@ def extract_article_date(soup: BeautifulSoup) -> str:
 
 def scrape(in_csv: str, out_csv: str):
     df = pd.read_csv(in_csv)
-
     texts = []
     dates = []
-
+    
     for i, row in df.iterrows():
         url = row["Url"]
         print(f"[{i}] Fetching {url}")
@@ -96,7 +95,7 @@ def main():
     parser.add_argument(
         "--in-csv",
         required=True,
-        help="Input CSV containing a column named 'Url'"
+        help="Input CSV containing a column named 'link'"
     )
     parser.add_argument(
         "--out-csv",

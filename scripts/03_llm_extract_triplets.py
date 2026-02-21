@@ -22,7 +22,7 @@ MODEL_NAME = "victorlxh/ICKG-v3.2"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 _pipe = None
 
-def build_prompt(article_text: str, max_chars: int = 1200) -> str:
+def build_prompt(article_text: str, max_chars: int = 1500) -> str:
     """
     Builds a prompt for the LLM. 
     """
@@ -33,7 +33,7 @@ def build_prompt(article_text: str, max_chars: int = 1200) -> str:
         "You are a business knowledge graph construction model. I will provide a news article labeled INPUT.\n"
         "Your task is to extract triplets of the form [head:type, relation, tail:type, sector].\n"
         f"Entities must be one of: {ENTITY_TYPES}. Relationships must be one of: {BASE_RELATIONS}. Sectors must be one of: {ALLOWED_SECTORS}.\n"
-        "First, summarize the document briefly. Then extract main triplets. Find the best suitable entity and relation types out of the allowed. Avoid redundant ones, simplify to most general form (e.g. 'foreign trade tariffs' and 'international import tariffs' become 'import tariffs').\n"
+        "First, summarize the document briefly. Then extract main triplets. Find the best suitable entity and relation types out of the allowed. Avoid redundant ones, simplify names (e.g. 'foreign trade tariffs' and 'international import tariffs' become 'import tariffs').\n"
         "Return ONLY valid JSON: a flat array of 4-element arrays like this:\n"
         '[["Apple Inc.:company", "acquires", "Beats Electronics:company", "technology"],\n'
         ' ["Google:company", "partners_with", "OpenAI:company", "AI"]]\n'
@@ -69,7 +69,7 @@ def get_pipeline():
             )
     return _pipe
 
-def generate(prompt: str, max_new_tokens: int = 256) -> str:
+def generate(prompt: str, max_new_tokens: int = 350) -> str:
     """
     Generator for the tokens. 
     """
