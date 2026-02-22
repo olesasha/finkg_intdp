@@ -9,6 +9,7 @@ from tqdm import tqdm
 def load_to_neo4j(csv_file, env_file: str, batch_size: int = 1000):
     df = pd.read_csv(csv_file)
     df["sector"] = df["sector"].str.lower()
+    df = df.dropna(subset=["entity1", "entity2"])
     # load Aura credentials
     dotenv.load_dotenv(env_file)
     URI = os.getenv("NEO4J_URI")
@@ -27,10 +28,8 @@ def load_to_neo4j(csv_file, env_file: str, batch_size: int = 1000):
             query = f"""
             MERGE (e1:Entity:`{entity1_type}` {{name: $e1_name}})
             MERGE (e2:Entity:`{entity2_type}` {{name: $e2_name}})
-            MERGE (e1)-[r:`{rel_type}`]->(e2)
-            SET r.sector = $sector,
-                r.url = $url,
-                r.date = $date
+            MERGE (e1)-[r:`{rel_type}` {{sector: $sector}}]->(e2)
+            SET r.history = coalesce(r.history, []) + [$url + "|" + $date]
             """
             tx.run(query,
                    e1_name=row['entity1'],
