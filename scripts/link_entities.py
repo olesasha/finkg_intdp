@@ -9,6 +9,7 @@ ENTITY_COLS = ["entity1", "entity2"]  # columns to link
 
 
 df = pd.read_csv(INPUT_CSV)
+df = df.dropna()
 
 unique_entities = pd.unique(df[ENTITY_COLS].values.ravel())
 
