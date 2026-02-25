@@ -1,6 +1,5 @@
 #!/bin/bash
 
-python 04_neo4j_dataloader.py \
-    --csv ../data/TRIPLETS_final_linked.csv \
+python 04_neo4j_dataextractor.py \
     --env ../Neo4j_private.txt \
-    --batch-size 1000 
+    --output ../data/Neo4J_extracted_data.csv

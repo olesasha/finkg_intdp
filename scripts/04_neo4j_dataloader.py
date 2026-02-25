@@ -26,8 +26,8 @@ def load_to_neo4j(csv_file, env_file: str, batch_size: int = 1000):
             entity2_type = row['entity2_type'].replace('`', '')
             
             query = f"""
-            MERGE (e1:Entity:`{entity1_type}` {{name: $e1_name}})
-            MERGE (e2:Entity:`{entity2_type}` {{name: $e2_name}})
+            MERGE (e1:`{entity1_type}` {{name: $e1_name}})
+            MERGE (e2:`{entity2_type}` {{name: $e2_name}})
             MERGE (e1)-[r:`{rel_type}` {{sector: $sector}}]->(e2)
             SET r.history = coalesce(r.history, []) + [$url + "|" + $date]
             """
@@ -75,4 +75,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-#python neo4j_dataloader.py --csv ../data/gfmag_sustainable_triplets.csv --env ../Neo4j-6b4d3211-Created-2026-01-22.txt --batch-size 1000
+#python neo4j_dataloader.py --csv ../data/gfmag_sustainable_triplets.csv --env ../Neo4j_private.txt --batch-size 1000

@@ -1,8 +1,10 @@
 import pandas as pd
 import torch
 
-def load_graph(csv_path, add_inverse=True):
-
+def load_graph_gcnn(csv_path, add_inverse=True):
+    """
+    Load the graph and adds inverse relationships for GCNN training. 
+    """
     df = pd.read_csv(csv_path)
     df = df[
         ["entity1", "entity1_type",
