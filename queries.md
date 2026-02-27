@@ -5,7 +5,7 @@
 MATCH (a)-[:has_positive_impact]->(b)
       -[r2:has_positive_impact]->(c)
 
-MATCH (a)-[ind:has_positive_indirect_impact]->(c)
+MERGE (a)-[ind:has_positive_indirect_impact]->(c)
 
 SET 
     ind.sector = r2.sector,
@@ -53,6 +53,13 @@ ON CREATE SET
     e.weight = 1
 ON MATCH SET
     e.weight = e.weight + 1
+```
+## E5: Remove general type "Entity"
+
+```cypher
+MATCH (n)
+WHERE 'Entity' IN labels(n) AND size(labels(n)) > 1
+REMOVE n:Entity
 ```
 
 # Dashboard queries
@@ -150,25 +157,16 @@ ORDER BY NumEntities DESC
 
 ## D8: DisasterEvent direct impact
 ```cypher
-
-// Step 1: find top connected DisasterEvents by degree
-MATCH (c:DisasterEvent)-[r]->()
-WHERE NOT type(r) IN [
-    "positive_indirect_impact",
-    "negative_indirect_impact",
-    "has_indirect_exposure"
-]
-WITH c, count(r) AS relCount
+// Step 1: find top connected disaster events (direct relationships only)
+MATCH (c:disaster_event)-[r]->()
+WHERE NOT type(r) CONTAINS "indirect"
+WITH c, COUNT(r) AS relCount
 ORDER BY relCount DESC
-LIMIT 10  // pick top N most connected events
+LIMIT 10
 
 // Step 2: return all direct relationships of these top events
 MATCH (c)-[r]->(e)
-WHERE NOT type(r) IN [
-    "positive_indirect_impact",
-    "negative_indirect_impact",
-    "has_indirect_exposure"
-]
+WHERE NOT type(r) CONTAINS "indirect"
 RETURN c, r, e
 LIMIT 200
 ```
@@ -235,4 +233,15 @@ ORDER BY NumRelationships DESC
 LIMIT 20
 UNWIND rels AS r
 RETURN a, b, r
+```
+
+## D15: active countries in sector 
+
+```cypher
+MATCH (country:country)-[r]-(e)
+WHERE r.sector = $custom_1
+  AND (r.source IS NULL OR r.source <> "inferred")
+RETURN country.name AS country,
+       COUNT(r) AS NumRelationships
+ORDER BY NumRelationships DESC
 ```

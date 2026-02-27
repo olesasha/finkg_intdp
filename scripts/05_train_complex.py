@@ -14,7 +14,7 @@ def create_tf(df):
     )
 
     train_tf, val_tf, test_tf = tf.split(
-        ratios=(0.7, 0.15, 0.15),
+        ratios=(0.8, 0.1, 0.1),
         random_state=11,
     )
 
