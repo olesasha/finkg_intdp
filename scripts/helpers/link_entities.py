@@ -2,72 +2,52 @@ import pandas as pd
 from refined.inference.processor import Refined
 from tqdm import tqdm
 
+YAHOO_CSV = "../data/TRIPLETS_yahoo.csv"
+GFMAG_CSV = "../data/TRIPLETS_ALL_gfmag.csv"
+OUTPUT_CSV = "../data/TRIPLETS_final_linked.csv"
 
-INPUT_CSV = "../data/TRIPLETS_final.csv"   # input CSV path
-OUTPUT_CSV = "../data/TRIPLETS_final_linked.csv"   # output CSV path
-ENTITY_COLS = ["entity1", "entity2"]  # columns to link
+ENTITY_COLS = ["entity1", "entity2"]
 
 
-df = pd.read_csv(INPUT_CSV)
+print("Reading triplet files...")
+yahoo = pd.read_csv(YAHOO_CSV)
+gfmag = pd.read_csv(GFMAG_CSV)
+
+df = pd.concat([yahoo, gfmag], ignore_index=True)
+
 df = df.dropna()
+
+print(f"Merged rows: {len(df)}")
 
 unique_entities = pd.unique(df[ENTITY_COLS].values.ravel())
 
+print(f"{len(unique_entities)} unique entities to link")
 
-refined = Refined.from_pretrained(model_name='wikipedia_model_with_numbers',
-                                  entity_set="wikipedia")
+print("Loading ReFinED...")
+refined = Refined.from_pretrained(
+    model_name="wikipedia_model_with_numbers",
+    entity_set="wikipedia"
+)
 
-# Map original -> linked
 entity_map = {}
 
 for ent in tqdm(unique_entities, desc="Linking entities"):
-    spans = refined.process_text(ent)
-    if spans and spans[0].text is not None:
-        # use the linked surface mention (span.text)
-        entity_map[ent] = spans[0].text
-    else:
-        # keep original if no link found
+    try:
+        spans = refined.process_text(ent)
+
+        if spans and spans[0].predicted_entity is not None:
+            entity_map[ent] = spans[0].predicted_entity.wikipedia_entity_title
+        else:
+            entity_map[ent] = ent
+
+    except Exception:
         entity_map[ent] = ent
 
-# Apply mapping to 
+
 for col in ENTITY_COLS:
     df[col] = df[col].map(entity_map)
 
-df.to_csv(OUTPUT_CSV, index=False)
-print(f"Linked entities saved to {OUTPUT_CSV}")import pandas as pd
-from refined.inference.processor import Refined
-from tqdm import tqdm
-
-
-INPUT_CSV = "../data/TRIPLETS_final.csv"   # input CSV path
-OUTPUT_CSV = "../data/TRIPLETS_final_linked.csv"   # output CSV path
-ENTITY_COLS = ["entity1", "entity2"]  # columns to link
-
-
-df = pd.read_csv(INPUT_CSV)
-df = df.dropna()
-
-unique_entities = pd.unique(df[ENTITY_COLS].values.ravel())
-
-
-refined = Refined.from_pretrained(model_name='wikipedia_model_with_numbers',
-                                  entity_set="wikipedia")
-
-# Map original -> linked
-entity_map = {}
-
-for ent in tqdm(unique_entities, desc="Linking entities"):
-    spans = refined.process_text(ent)
-    if spans and spans[0].text is not None:
-        # use the linked surface mention (span.text)
-        entity_map[ent] = spans[0].text
-    else:
-        # keep original if no link found
-        entity_map[ent] = ent
-
-# Apply mapping to 
-for col in ENTITY_COLS:
-    df[col] = df[col].map(entity_map)
 
 df.to_csv(OUTPUT_CSV, index=False)
-print(f"Linked entities saved to {OUTPUT_CSV}")
+
+print(f"Saved linked triplets to {OUTPUT_CSV}")
