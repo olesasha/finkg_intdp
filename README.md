@@ -45,16 +45,17 @@ Current repository layout:
 scripts/
 ├── 01_run_urls_scraping.sh
 ├── 02_run_text_scraping.sh
-├── 03_run_extraction_scripts.sh
-├── 04_run_loadneo4j_scripts.sh
+├── 03_run_extraction.sh
+├── 04_run_loadneo4j.sh
+├── 05_train_complex.sh
+├── 06_train_gcnn.sh
 ├── 01_gfmag_collect_urls.py
 ├── 02_get_text.py
 ├── 03_llm_extract_triplets.py
 ├── 04_neo4j_dataextractor.py
-├── 05_neo4jData_to_PyG.py
-├── 06_complex.py
+├── 05_train_complex.py
+├── 06_train_gcnn.py
 ├── helpers/
-├── archive/
 └── logs/
 ```
 
@@ -68,15 +69,19 @@ cd finkg_intdp
 
 2. Create a virtual environment
 
+Python3.9. on Linux was used for this project. 
+
 python -m venv .venv
 source .venv/bin/activate
-
 
 3. Install dependencies
 
 pip install --upgrade pip
 pip install -r requirements.txt
 
+Note: requirements.txt only include the minimum standard packages that will not break any environment upon installation.
+Additional installs might be required.
+ReFiNeD is an external model and is used for entity linking. Can be cloned directly from Github: https://github.com/amazon-science/ReFinED. 
 
 4. Create required directories
 
@@ -154,17 +159,21 @@ Scrapes article text from URLs.
 - 03_llm_extract_triplets.py  
 Extracts knowledge graph triplets using an LLM.
 
-- 04_neo4j_dataextractor.py  
-Exports graph data from Neo4j.
+- 04_neo4j_dataloader.py
+- 04_neo4j_dataextractor.py (only needed for extracting inferred relations from Neo4J, does not influence the pipeline)
+Load and extracts data from Neo4j.
 
-- 05_neo4j_dataloader.py
-- 05_neo4j_dataextractor.py (only needed for extracting inferred relations from Neo4J, does not influence the pipeline)
 
 - 05_train_complex.py  
 Runs a ComplEx knowledge graph embedding experiment.
 
 - 06_train_gcnn.py  
 Runs a RGCNN model.
+
+## NEO4J DASHBOARD
+Neo4j Aura Community Edition was used for the project. 
+To recreate Neo4J database, after completing step 4, go to ```queries.md```and run the "Extensions Queries".
+To recreate Neo4J dashboard, additionally run the "Dashboard queries" (F*, D*) in the dashboard dev UI. 
 
 ## REFERENCES
 

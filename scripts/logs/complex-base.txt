@@ -1,0 +1,19 @@
+=== Validation Metrics ===
+{'MRR': 0.00023066551607652398, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.00013061650992685477}                                                                                    
+
+=== Test Metrics ===
+{'MRR': 0.00018504908499855635, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0}                                                                                                       
+
+=== Test Per-Relation Metrics ===
+Relation 0: {'MRR': 0.00014034678116414258, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 7}                                         
+Relation 1: {'MRR': 0.000263274984122854, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 48}
+Relation 2: {'MRR': 0.0002097800337497571, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 332}
+Relation 3: {'MRR': 0.0003086921556076508, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 245}
+Relation 4: {'MRR': 0.00014375044399694563, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 830}
+Relation 5: {'MRR': 6.965815957404947e-05, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 38}
+Relation 6: {'MRR': 0.0001614689071385089, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 397}
+Relation 7: {'MRR': 4.49911388103743e-05, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 5}
+Relation 8: {'MRR': 0.00020315687672801768, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 438}
+Relation 9: {'MRR': 6.644916845641695e-05, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 18}
+Relation 10: {'MRR': 0.00014124976831424098, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 49}
+Relation 12: {'MRR': 0.0002652784557903701, 'Hits@1': 0.0, 'Hits@3': 0.0, 'Hits@10': 0.0, 'support': 39}
