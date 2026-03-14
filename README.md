@@ -92,9 +92,6 @@ mkdir -p scripts/logs
 
 
 ## NEO4J CONFIGURATION
-
-Neo4j credentials should NOT be committed.
-
 Create Neo4j_private.txt with the same structure as Neo4j_public.txt
 
 The Neo4j scripts reference the private file when connecting to the database.
