@@ -59,7 +59,11 @@ scripts/
 └── logs/
 ```
 
+## QUICK SETUP 
 
+If you just want to explore the database, use the TRIPLETS_neo4j.csv file to upload triplets to Neo4J directly. To complete the database to the final project state you will also need to use the extension queries from the queries.md (optional). 
+
+The csv file can be loaded to the Neo4J using 04_run_loadneo4j.sh (requires environment setup) or directly in the Neo4J interface. 
 ## SETUP
 
 1. Clone the repository
